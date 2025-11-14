@@ -224,7 +224,7 @@ export function NavContent({ data, slots, sx }: NavSharedProps) {
 
   return (
     <>
-      <Logo />
+      <Logo href="/dashboard" />
 
       {slots?.topArea}
 

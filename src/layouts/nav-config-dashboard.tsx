@@ -1,8 +1,10 @@
 import { SvgColor } from 'src/components/svg-color';
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => <SvgColor src={`/assets/icons/navbar/${name}.svg`} />;
+const iconify = (name: string) => <Iconify width={24} icon={name} />;
 
 export type NavItem = {
   title: string;
@@ -31,22 +33,22 @@ export const navData = [
       {
         title: 'Departments',
         path: '/ecommerce/departments',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:buildings-bold-duotone'),
       },
       {
         title: 'Categories',
         path: '/ecommerce/categories',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:folder-bold-duotone'),
       },
       {
         title: 'Subcategories',
         path: '/ecommerce/subcategories',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:folder-with-files-bold-duotone'),
       },
       {
         title: 'Products',
         path: '/ecommerce/products',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:box-bold-duotone'),
       },
     ],
   },
@@ -58,22 +60,22 @@ export const navData = [
       {
         title: 'Pincodes',
         path: '/outlet/pincodes',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:map-point-bold-duotone'),
       },
       {
         title: 'Stores',
         path: '/outlet/stores',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:shop-bold-duotone'),
       },
       {
         title: 'Payment Modes',
         path: '/outlet/payment-modes',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:card-bold-duotone'),
       },
       {
         title: 'Delivery Slots',
         path: '/outlet/delivery-slots',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:clock-circle-bold-duotone'),
       },
     ],
   },
@@ -85,17 +87,17 @@ export const navData = [
       {
         title: 'Best Sellers',
         path: '/dynamic/best-sellers',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:star-bold-duotone'),
       },
       {
         title: 'Advertisements',
         path: '/dynamic/advertisements',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:megaphone-bold-duotone'),
       },
       {
         title: 'Popular Categories',
         path: '/dynamic/popular-categories',
-        icon: icon('ic-analytics'),
+        icon: iconify('solar:fire-bold-duotone'),
       },
     ],
   },
