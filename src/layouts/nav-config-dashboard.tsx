@@ -1,10 +1,10 @@
-import { SvgColor } from 'src/components/svg-color';
 import { Iconify } from 'src/components/iconify';
+import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => <SvgColor src={`/assets/icons/navbar/${name}.svg`} />;
-const iconify = (name: string) => <Iconify width={24} icon={name} />;
+const iconify = (name: string) => <Iconify width={24} icon={name as any} />;
 
 export type NavItem = {
   title: string;

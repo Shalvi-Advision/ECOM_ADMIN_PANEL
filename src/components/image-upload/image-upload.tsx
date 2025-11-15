@@ -112,7 +112,7 @@ export function ImageUpload({
                 uploading ? (
                   <CircularProgress size={20} />
                 ) : (
-                  <Iconify icon="solar:upload-bold" />
+                  <Iconify icon={"solar:upload-bold" as any} />
                 )
               }
               sx={{ justifyContent: 'flex-start' }}
