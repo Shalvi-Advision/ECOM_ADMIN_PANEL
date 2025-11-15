@@ -20,10 +20,7 @@ import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { CONFIG } from 'src/config-global';
-import {
-  deleteSeasonalCategory,
-  getAllSeasonalCategories,
-} from 'src/services/seasonal-categories';
+import { deleteSeasonalCategory, getAllSeasonalCategories } from 'src/services/seasonal-categories';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -98,8 +95,7 @@ export default function Page() {
     fetchSeasonalCategories(); // Refresh list
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -140,8 +136,8 @@ export default function Page() {
                       <TableCell>Title</TableCell>
                       <TableCell>Season</TableCell>
                       <TableCell>Store Code(s)</TableCell>
-                      <TableCell>Status</TableCell>
                       <TableCell>Subcategories</TableCell>
+                      <TableCell>Status</TableCell>
                       <TableCell>Start Date</TableCell>
                       <TableCell>End Date</TableCell>
                       <TableCell>Sequence</TableCell>
@@ -178,17 +174,8 @@ export default function Page() {
                             <Chip
                               label={item.season || 'all'}
                               size="small"
-                              color={
-                                item.season === 'winter'
-                                  ? 'info'
-                                  : item.season === 'summer'
-                                    ? 'warning'
-                                    : item.season === 'spring'
-                                      ? 'success'
-                                      : item.season === 'autumn' || item.season === 'fall'
-                                        ? 'error'
-                                        : 'default'
-                              }
+                              color="primary"
+                              variant="outlined"
                             />
                           </TableCell>
                           <TableCell>
@@ -206,22 +193,29 @@ export default function Page() {
                           </TableCell>
                           <TableCell>
                             <Chip
+                              label={`${item.subcategories?.length || 0} subcategory(ies)`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
                               label={item.is_active ? 'Active' : 'Inactive'}
                               color={item.is_active ? 'success' : 'default'}
                               size="small"
                             />
                           </TableCell>
                           <TableCell>
-                            <Chip
-                              label={`${item.subcategories.length} item${item.subcategories.length !== 1 ? 's' : ''}`}
-                              size="small"
-                            />
+                            {item.start_date ? formatDate(item.start_date) : '-'}
                           </TableCell>
-                          <TableCell>{formatDate(item.start_date)}</TableCell>
-                          <TableCell>{formatDate(item.end_date)}</TableCell>
+                          <TableCell>{item.end_date ? formatDate(item.end_date) : '-'}</TableCell>
                           <TableCell>{item.sequence}</TableCell>
                           <TableCell align="right">
-                            <IconButton size="small" onClick={() => handleEdit(item)} color="primary">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(item)}
+                              color="primary"
+                            >
                               <Iconify icon="solar:pen-bold" />
                             </IconButton>
                             <IconButton

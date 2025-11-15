@@ -10,10 +10,12 @@ import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TableRow from '@mui/material/TableRow';
+import MenuItem from '@mui/material/MenuItem';
 import Container from '@mui/material/Container';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
@@ -36,12 +38,17 @@ export default function Page() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
   const [deleteId, setDeleteId] = useState<string>('');
+  const [sectionFilter, setSectionFilter] = useState<string>('');
 
   const fetchBanners = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await getAllBanners({ page: 1, limit: 100 });
+      const params: any = { page: 1, limit: 100 };
+      if (sectionFilter) {
+        params.section_name = sectionFilter;
+      }
+      const response = await getAllBanners(params);
       if (response.success) {
         setBanners(response.data);
       }
@@ -50,7 +57,7 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sectionFilter]);
 
   useEffect(() => {
     fetchBanners();
@@ -94,14 +101,23 @@ export default function Page() {
     fetchBanners(); // Refresh list
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const getBannerCount = (banner: Banner): number => {
+    if (banner.banner_assets && banner.banner_assets.length > 0) {
+      return banner.banner_assets.length;
+    }
+    if (banner.banner_urls) {
+      return Object.keys(banner.banner_urls).length;
+    }
+    return 1; // Default to 1 if only image_url exists
   };
 
   return (
@@ -127,6 +143,22 @@ export default function Page() {
             </Alert>
           )}
 
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              select
+              label="Filter by Section"
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value="">All Sections</MenuItem>
+              <MenuItem value="home_top">Home Top</MenuItem>
+              <MenuItem value="home_middle">Home Middle</MenuItem>
+              <MenuItem value="category_banner">Category Banner</MenuItem>
+              <MenuItem value="product_detail_banner">Product Detail Banner</MenuItem>
+            </TextField>
+          </Stack>
+
           <Card>
             <Scrollbar>
               <TableContainer>
@@ -135,7 +167,7 @@ export default function Page() {
                     <TableRow>
                       <TableCell>Title</TableCell>
                       <TableCell>Section Name</TableCell>
-                      <TableCell>Action Type</TableCell>
+                      <TableCell>Banner Count</TableCell>
                       <TableCell>Store Code(s)</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Start Date</TableCell>
@@ -170,17 +202,10 @@ export default function Page() {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={item.action.type}
+                              label={`${getBannerCount(item)} banner(s)`}
                               size="small"
-                              color={
-                                item.action.type === 'none'
-                                  ? 'default'
-                                  : item.action.type === 'category'
-                                    ? 'primary'
-                                    : item.action.type === 'product'
-                                      ? 'secondary'
-                                      : 'info'
-                              }
+                              color="primary"
+                              variant="outlined"
                             />
                           </TableCell>
                           <TableCell>
@@ -203,11 +228,17 @@ export default function Page() {
                               size="small"
                             />
                           </TableCell>
-                          <TableCell>{formatDate(item.start_date)}</TableCell>
-                          <TableCell>{formatDate(item.end_date)}</TableCell>
+                          <TableCell>
+                            {item.start_date ? formatDate(item.start_date) : '-'}
+                          </TableCell>
+                          <TableCell>{item.end_date ? formatDate(item.end_date) : '-'}</TableCell>
                           <TableCell>{item.sequence}</TableCell>
                           <TableCell align="right">
-                            <IconButton size="small" onClick={() => handleEdit(item)} color="primary">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(item)}
+                              color="primary"
+                            >
                               <Iconify icon="solar:pen-bold" />
                             </IconButton>
                             <IconButton

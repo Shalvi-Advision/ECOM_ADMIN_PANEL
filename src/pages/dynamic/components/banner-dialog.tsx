@@ -1,24 +1,24 @@
-import type { Banner, BannerPayload } from 'src/types/api';
+import type { Banner, BannerAsset, BannerPayload } from 'src/types/api';
 
 import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import Select from '@mui/material/Select';
 import Switch from '@mui/material/Switch';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
-import FormControl from '@mui/material/FormControl';
+import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { createBanner, updateBanner } from 'src/services/banners';
 
@@ -39,7 +39,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
   // Form state
   const [title, setTitle] = useState('');
   const [sectionName, setSectionName] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [actionType, setActionType] = useState<'category' | 'product' | 'url' | 'none'>('none');
   const [actionValue, setActionValue] = useState('');
   const [storeCode, setStoreCode] = useState('');
@@ -48,28 +47,40 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
   const [sequence, setSequence] = useState(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [metadataJson, setMetadataJson] = useState('{}');
+  const [bannerAssets, setBannerAssets] = useState<BannerAsset[]>([]);
 
   // Load data when editing
   useEffect(() => {
     if (banner) {
       setTitle(banner.title || '');
       setSectionName(banner.section_name || '');
-      setImageUrl(banner.image_url || '');
       setActionType(banner.action?.type || 'none');
       setActionValue(banner.action?.value || '');
       setStoreCode(banner.store_code || '');
       setStoreCodes(banner.store_codes || []);
       setIsActive(banner.is_active);
       setSequence(banner.sequence || 0);
-      setStartDate(banner.start_date ? banner.start_date.split('T')[0] : '');
-      setEndDate(banner.end_date ? banner.end_date.split('T')[0] : '');
-      setMetadataJson(JSON.stringify(banner.metadata || {}, null, 2));
+      setStartDate(banner.start_date ? new Date(banner.start_date).toISOString().split('T')[0] : '');
+      setEndDate(banner.end_date ? new Date(banner.end_date).toISOString().split('T')[0] : '');
+      
+      // Load banner assets from banner_assets or banner_urls
+      if (banner.banner_assets && banner.banner_assets.length > 0) {
+        setBannerAssets(banner.banner_assets);
+      } else if (banner.banner_urls) {
+        // Convert banner_urls object to banner_assets array
+        const assets: BannerAsset[] = Object.entries(banner.banner_urls).map(([key, urls]) => ({
+          key,
+          desktop: urls.desktop,
+          mobile: urls.mobile,
+        }));
+        setBannerAssets(assets);
+      } else {
+        setBannerAssets([]);
+      }
     } else {
       // Reset form for create
       setTitle('');
       setSectionName('');
-      setImageUrl('');
       setActionType('none');
       setActionValue('');
       setStoreCode('');
@@ -78,7 +89,7 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
       setSequence(0);
       setStartDate('');
       setEndDate('');
-      setMetadataJson('{}');
+      setBannerAssets([]);
     }
     setError('');
   }, [banner, open]);
@@ -94,32 +105,57 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
     setStoreCodes(storeCodes.filter((_, i) => i !== index));
   };
 
+  const handleAddBannerAsset = () => {
+    if (bannerAssets.length >= 10) {
+      setError('Maximum 10 banner assets allowed');
+      return;
+    }
+    const newKey = `bannerUrl${bannerAssets.length + 1}`;
+    setBannerAssets([
+      ...bannerAssets,
+      { key: newKey, desktop: '', mobile: '' },
+    ]);
+  };
+
+  const handleRemoveBannerAsset = (index: number) => {
+    setBannerAssets(bannerAssets.filter((_, i) => i !== index));
+  };
+
+  const handleBannerAssetChange = (
+    index: number,
+    field: 'key' | 'desktop' | 'mobile',
+    value: string
+  ) => {
+    const newAssets = [...bannerAssets];
+    newAssets[index] = { ...newAssets[index], [field]: value };
+    setBannerAssets(newAssets);
+  };
+
   const validateForm = (): boolean => {
     if (!title.trim()) {
       setError('Title is required');
       return false;
     }
     if (!sectionName.trim()) {
-      setError('Section Name is required');
+      setError('Section name is required');
       return false;
     }
-    if (!imageUrl.trim()) {
-      setError('Image URL is required');
+    if (bannerAssets.length === 0) {
+      setError('At least one banner asset is required');
       return false;
+    }
+    // Validate each banner asset has at least desktop or mobile URL
+    for (let i = 0; i < bannerAssets.length; i++) {
+      const asset = bannerAssets[i];
+      if (!asset.desktop?.trim() && !asset.mobile?.trim()) {
+        setError(`Banner asset ${i + 1} must have at least a desktop or mobile URL`);
+        return false;
+      }
     }
     if (actionType !== 'none' && !actionValue.trim()) {
-      setError(`Action value is required for action type "${actionType}"`);
+      setError(`Action value is required when action type is ${actionType}`);
       return false;
     }
-
-    // Validate metadata JSON
-    try {
-      JSON.parse(metadataJson);
-    } catch {
-      setError('Metadata must be valid JSON');
-      return false;
-    }
-
     return true;
   };
 
@@ -129,17 +165,17 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
     setLoading(true);
     setError('');
 
-    let metadata;
-    try {
-      metadata = JSON.parse(metadataJson);
-    } catch {
-      metadata = {};
-    }
+    // Prepare banner assets with auto-generated keys if missing
+    const preparedAssets: BannerAsset[] = bannerAssets.map((asset, index) => ({
+      key: asset.key?.trim() || `bannerUrl${index + 1}`,
+      desktop: asset.desktop?.trim() || undefined,
+      mobile: asset.mobile?.trim() || undefined,
+    }));
 
     const payload: BannerPayload = {
       title: title.trim(),
       section_name: sectionName.trim(),
-      image_url: imageUrl.trim(),
+      banner_assets: preparedAssets,
       action: {
         type: actionType,
         value: actionType !== 'none' ? actionValue.trim() : undefined,
@@ -150,7 +186,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
       sequence,
       start_date: startDate ? new Date(startDate).toISOString() : undefined,
       end_date: endDate ? new Date(endDate).toISOString() : undefined,
-      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     };
 
     try {
@@ -192,48 +227,164 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
             helperText="e.g., home_top, home_middle, category_banner"
           />
 
-          <ImageUpload
-            label="Banner Image"
-            value={imageUrl}
-            onChange={setImageUrl}
-            required
-            folder="banners"
-            helperText="Upload image or enter URL (max 5MB)"
-          />
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 2 }}>
+              Banner Assets (up to 10)
+            </Typography>
+            <Stack spacing={2}>
+              {bannerAssets.map((asset, index) => (
+                <Card key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body2" sx={{ minWidth: 100 }}>
+                        Banner {index + 1}
+                      </Typography>
+                      <TextField
+                        size="small"
+                        label="Key (optional)"
+                        value={asset.key || `bannerUrl${index + 1}`}
+                        onChange={(e) => handleBannerAssetChange(index, 'key', e.target.value)}
+                        sx={{ flex: 1 }}
+                        helperText="Auto-generated if not provided"
+                      />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleRemoveBannerAsset(index)}
+                      >
+                        <Iconify icon="solar:trash-bin-trash-bold" />
+                      </IconButton>
+                    </Stack>
 
-          <FormControl fullWidth required>
-            <InputLabel>Action Type</InputLabel>
-            <Select
-              value={actionType}
-              label="Action Type"
-              onChange={(e) => setActionType(e.target.value as any)}
+                    <Stack direction="row" spacing={2}>
+                      <Box sx={{ flex: 1 }}>
+                        <ImageUpload
+                          label="Desktop URL"
+                          value={asset.desktop || ''}
+                          onChange={(url) => handleBannerAssetChange(index, 'desktop', url)}
+                          folder="banners"
+                          helperText="At least one URL required"
+                        />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <ImageUpload
+                          label="Mobile URL"
+                          value={asset.mobile || ''}
+                          onChange={(url) => handleBannerAssetChange(index, 'mobile', url)}
+                          folder="banners"
+                          helperText="At least one URL required"
+                        />
+                      </Box>
+                    </Stack>
+
+                    {(asset.desktop || asset.mobile) && (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          gap: 1,
+                          p: 1,
+                          bgcolor: 'background.paper',
+                          borderRadius: 1,
+                        }}
+                      >
+                        {asset.desktop && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Desktop Preview:
+                            </Typography>
+                            <Box
+                              component="img"
+                              src={asset.desktop}
+                              alt={`Desktop ${index + 1}`}
+                              sx={{
+                                width: '100%',
+                                maxHeight: 100,
+                                objectFit: 'contain',
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </Box>
+                        )}
+                        {asset.mobile && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Mobile Preview:
+                            </Typography>
+                            <Box
+                              component="img"
+                              src={asset.mobile}
+                              alt={`Mobile ${index + 1}`}
+                              sx={{
+                                width: '100%',
+                                maxHeight: 100,
+                                objectFit: 'contain',
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+
+            <Button
+              variant="outlined"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={handleAddBannerAsset}
+              disabled={bannerAssets.length >= 10}
+              sx={{ mt: 2 }}
             >
-              <MenuItem value="none">None (Display Only)</MenuItem>
-              <MenuItem value="category">Navigate to Category</MenuItem>
-              <MenuItem value="product">Navigate to Product</MenuItem>
-              <MenuItem value="url">Open URL</MenuItem>
-            </Select>
-          </FormControl>
+              Add Banner Asset {bannerAssets.length >= 10 ? '(Max 10)' : ''}
+            </Button>
+          </Box>
+
+          <Divider />
+
+          <TextField
+            fullWidth
+            select
+            label="Action Type"
+            value={actionType}
+            onChange={(e) => {
+              setActionType(e.target.value as 'category' | 'product' | 'url' | 'none');
+              if (e.target.value === 'none') {
+                setActionValue('');
+              }
+            }}
+            required
+          >
+            <MenuItem value="none">None</MenuItem>
+            <MenuItem value="category">Category</MenuItem>
+            <MenuItem value="product">Product</MenuItem>
+            <MenuItem value="url">URL</MenuItem>
+          </TextField>
 
           {actionType !== 'none' && (
             <TextField
               fullWidth
-              label={
-                actionType === 'category'
-                  ? 'Category ID'
-                  : actionType === 'product'
-                    ? 'Product SKU'
-                    : 'URL'
-              }
+              label={`Action Value (${actionType})`}
               value={actionValue}
               onChange={(e) => setActionValue(e.target.value)}
               required
               helperText={
                 actionType === 'category'
-                  ? 'e.g., woodenware'
+                  ? 'Category ID'
                   : actionType === 'product'
-                    ? 'e.g., SKU44112'
-                    : 'e.g., https://example.com/offers'
+                    ? 'Product SKU'
+                    : 'Full URL'
               }
             />
           )}
@@ -290,29 +441,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
             </Stack>
           </Box>
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              type="date"
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="End Date (Optional)"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              type="date"
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-          </Stack>
-
           <TextField
             fullWidth
             label="Sequence"
@@ -321,19 +449,28 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
             type="number"
           />
 
+          <Stack direction="row" spacing={2}>
+            <TextField
+              fullWidth
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Stack>
+
           <FormControlLabel
             control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />}
             label="Is Active"
-          />
-
-          <TextField
-            fullWidth
-            label="Metadata (JSON)"
-            value={metadataJson}
-            onChange={(e) => setMetadataJson(e.target.value)}
-            multiline
-            rows={3}
-            helperText="Enter valid JSON, e.g., {&quot;campaign&quot;: &quot;new-arrivals-2025&quot;}"
           />
         </Stack>
       </DialogContent>

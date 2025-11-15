@@ -583,12 +583,21 @@ export interface BannerAction {
   value?: string;
 }
 
+// Banner Asset (for multiple banners per section)
+export interface BannerAsset {
+  key?: string; // Optional, defaults to bannerUrl1, bannerUrl2, etc.
+  desktop?: string; // At least one of desktop or mobile required
+  mobile?: string; // At least one of desktop or mobile required
+}
+
 // Banner type matching backend model
 export interface Banner {
   _id: string;
   title: string;
   section_name: string;
-  image_url: string;
+  image_url?: string; // Optional, auto-populated from first banner asset
+  banner_assets?: BannerAsset[]; // Array of up to 10 banner variants
+  banner_urls?: { [key: string]: { desktop?: string; mobile?: string } }; // Object format (bannerUrl1, bannerUrl2, etc.)
   action: BannerAction;
   store_code?: string;
   store_codes?: string[];
@@ -616,7 +625,8 @@ export interface BannersQueryParams {
 export interface BannerPayload {
   title: string;
   section_name: string;
-  image_url: string;
+  image_url?: string; // Optional, auto-populated from first banner asset
+  banner_assets?: BannerAsset[]; // Submit as array format (preferred)
   action: BannerAction;
   store_code?: string;
   store_codes?: string[];

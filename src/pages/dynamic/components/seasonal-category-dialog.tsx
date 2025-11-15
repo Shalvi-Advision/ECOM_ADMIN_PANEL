@@ -1,4 +1,8 @@
-import type { SeasonalCategory, SeasonalCategoryItem, SeasonalCategoryPayload } from 'src/types/api';
+import type {
+  SeasonalCategory,
+  SeasonalCategoryItem,
+  SeasonalCategoryPayload,
+} from 'src/types/api';
 
 import { useState, useEffect } from 'react';
 
@@ -7,23 +11,17 @@ import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import Select from '@mui/material/Select';
 import Switch from '@mui/material/Switch';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
-import FormControl from '@mui/material/FormControl';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
-import {
-  createSeasonalCategory,
-  updateSeasonalCategory,
-} from 'src/services/seasonal-categories';
+import { createSeasonalCategory, updateSeasonalCategory } from 'src/services/seasonal-categories';
 
 import { Iconify } from 'src/components/iconify';
 import { ImageUpload } from 'src/components/image-upload';
@@ -47,15 +45,13 @@ export function SeasonalCategoryDialog({
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [storeCode, setStoreCode] = useState('');
+  const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [desktopBanner, setDesktopBanner] = useState('');
   const [mobileBanner, setMobileBanner] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [redirectUrl, setRedirectUrl] = useState('');
-  const [storeCode, setStoreCode] = useState('');
-  const [storeCodes, setStoreCodes] = useState<string[]>([]);
-  const [season, setSeason] = useState<
-    'spring' | 'summer' | 'autumn' | 'fall' | 'winter' | 'holiday' | 'festive' | 'all'
-  >('all');
+  const [season, setSeason] = useState<'spring' | 'summer' | 'autumn' | 'fall' | 'winter' | 'holiday' | 'festive' | 'all'>('all');
   const [isActive, setIsActive] = useState(true);
   const [sequence, setSequence] = useState(0);
   const [startDate, setStartDate] = useState('');
@@ -67,28 +63,28 @@ export function SeasonalCategoryDialog({
     if (seasonalCategory) {
       setTitle(seasonalCategory.title || '');
       setDescription(seasonalCategory.description || '');
+      setStoreCode(seasonalCategory.store_code || '');
+      setStoreCodes(seasonalCategory.store_codes || []);
       setDesktopBanner(seasonalCategory.banner_urls?.desktop || '');
       setMobileBanner(seasonalCategory.banner_urls?.mobile || '');
       setBackgroundColor(seasonalCategory.background_color || '#ffffff');
       setRedirectUrl(seasonalCategory.redirect_url || '');
-      setStoreCode(seasonalCategory.store_code || '');
-      setStoreCodes(seasonalCategory.store_codes || []);
       setSeason(seasonalCategory.season || 'all');
       setIsActive(seasonalCategory.is_active);
       setSequence(seasonalCategory.sequence || 0);
-      setStartDate(seasonalCategory.start_date ? seasonalCategory.start_date.split('T')[0] : '');
-      setEndDate(seasonalCategory.end_date ? seasonalCategory.end_date.split('T')[0] : '');
+      setStartDate(seasonalCategory.start_date ? new Date(seasonalCategory.start_date).toISOString().split('T')[0] : '');
+      setEndDate(seasonalCategory.end_date ? new Date(seasonalCategory.end_date).toISOString().split('T')[0] : '');
       setSubcategories(seasonalCategory.subcategories || []);
     } else {
       // Reset form for create
       setTitle('');
       setDescription('');
+      setStoreCode('');
+      setStoreCodes([]);
       setDesktopBanner('');
       setMobileBanner('');
       setBackgroundColor('#ffffff');
       setRedirectUrl('');
-      setStoreCode('');
-      setStoreCodes([]);
       setSeason('all');
       setIsActive(true);
       setSequence(0);
@@ -113,7 +109,7 @@ export function SeasonalCategoryDialog({
   const handleAddSubcategory = () => {
     setSubcategories([
       ...subcategories,
-      { sub_category_id: '', position: subcategories.length + 1, metadata: {} },
+      { sub_category_id: '', position: subcategories.length + 1, redirect_url: '', metadata: {} },
     ]);
   };
 
@@ -130,7 +126,7 @@ export function SeasonalCategoryDialog({
     if (field === 'badge') {
       newSubcategories[index] = {
         ...newSubcategories[index],
-        metadata: { ...newSubcategories[index].metadata, badge: String(value) },
+        metadata: { ...newSubcategories[index].metadata, badge: value as string },
       };
     } else {
       newSubcategories[index] = { ...newSubcategories[index], [field]: value };
@@ -171,14 +167,14 @@ export function SeasonalCategoryDialog({
     const payload: SeasonalCategoryPayload = {
       title: title.trim(),
       description: description.trim() || undefined,
+      store_code: storeCode.trim() || undefined,
+      store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       banner_urls: {
         desktop: desktopBanner.trim(),
         mobile: mobileBanner.trim(),
       },
       background_color: backgroundColor.trim(),
       redirect_url: redirectUrl.trim() || undefined,
-      store_code: storeCode.trim() || undefined,
-      store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       season,
       is_active: isActive,
       sequence,
@@ -260,8 +256,36 @@ export function SeasonalCategoryDialog({
             label="Redirect URL"
             value={redirectUrl}
             onChange={(e) => setRedirectUrl(e.target.value)}
-            helperText="e.g., app://seasonal/winter"
           />
+
+          <TextField
+            fullWidth
+            select
+            label="Season"
+            value={season}
+            onChange={(e) =>
+              setSeason(
+                e.target.value as
+                  | 'spring'
+                  | 'summer'
+                  | 'autumn'
+                  | 'fall'
+                  | 'winter'
+                  | 'holiday'
+                  | 'festive'
+                  | 'all'
+              )
+            }
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="spring">Spring</MenuItem>
+            <MenuItem value="summer">Summer</MenuItem>
+            <MenuItem value="autumn">Autumn</MenuItem>
+            <MenuItem value="fall">Fall</MenuItem>
+            <MenuItem value="winter">Winter</MenuItem>
+            <MenuItem value="holiday">Holiday</MenuItem>
+            <MenuItem value="festive">Festive</MenuItem>
+          </TextField>
 
           <Stack direction="row" spacing={2}>
             <TextField
@@ -315,43 +339,6 @@ export function SeasonalCategoryDialog({
             </Stack>
           </Box>
 
-          <FormControl fullWidth>
-            <InputLabel>Season</InputLabel>
-            <Select value={season} label="Season" onChange={(e) => setSeason(e.target.value as any)}>
-              <MenuItem value="all">All Seasons</MenuItem>
-              <MenuItem value="spring">Spring</MenuItem>
-              <MenuItem value="summer">Summer</MenuItem>
-              <MenuItem value="autumn">Autumn</MenuItem>
-              <MenuItem value="fall">Fall</MenuItem>
-              <MenuItem value="winter">Winter</MenuItem>
-              <MenuItem value="holiday">Holiday</MenuItem>
-              <MenuItem value="festive">Festive</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              type="date"
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="End Date (Optional)"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              type="date"
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-          </Stack>
-
           <TextField
             fullWidth
             label="Sequence"
@@ -360,6 +347,25 @@ export function SeasonalCategoryDialog({
             type="number"
           />
 
+          <Stack direction="row" spacing={2}>
+            <TextField
+              fullWidth
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Stack>
+
           <FormControlLabel
             control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />}
             label="Is Active"
@@ -367,7 +373,7 @@ export function SeasonalCategoryDialog({
 
           <Box>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-              <span>Subcategories (Required, min: 1)</span>
+              <span>Subcategories (at least one required)</span>
               <Button
                 size="small"
                 startIcon={<Iconify icon="mingcute:add-line" />}
@@ -387,13 +393,22 @@ export function SeasonalCategoryDialog({
                     <Stack direction="row" spacing={1}>
                       <TextField
                         size="small"
-                        label="Subcategory ID"
+                        label="Sub Category ID"
                         value={subcategory.sub_category_id}
                         onChange={(e) =>
                           handleSubcategoryChange(index, 'sub_category_id', e.target.value)
                         }
                         required
                         sx={{ flex: 2 }}
+                      />
+                      <TextField
+                        size="small"
+                        label="Store Code"
+                        value={subcategory.store_code || ''}
+                        onChange={(e) =>
+                          handleSubcategoryChange(index, 'store_code', e.target.value)
+                        }
+                        sx={{ flex: 1 }}
                       />
                       <TextField
                         size="small"
@@ -413,24 +428,15 @@ export function SeasonalCategoryDialog({
                         <Iconify icon="solar:trash-bin-trash-bold" />
                       </IconButton>
                     </Stack>
-                    <Stack direction="row" spacing={1}>
-                      <TextField
-                        size="small"
-                        label="Store Code"
-                        value={subcategory.store_code || ''}
-                        onChange={(e) => handleSubcategoryChange(index, 'store_code', e.target.value)}
-                        sx={{ flex: 1 }}
-                      />
-                      <TextField
-                        size="small"
-                        label="Redirect URL"
-                        value={subcategory.redirect_url || ''}
-                        onChange={(e) =>
-                          handleSubcategoryChange(index, 'redirect_url', e.target.value)
-                        }
-                        sx={{ flex: 2 }}
-                      />
-                    </Stack>
+                    <TextField
+                      size="small"
+                      label="Redirect URL"
+                      value={subcategory.redirect_url || ''}
+                      onChange={(e) =>
+                        handleSubcategoryChange(index, 'redirect_url', e.target.value)
+                      }
+                      fullWidth
+                    />
                     <TextField
                       size="small"
                       label="Badge (metadata)"
@@ -451,13 +457,7 @@ export function SeasonalCategoryDialog({
           Cancel
         </Button>
         <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-          {loading ? (
-            <CircularProgress size={24} />
-          ) : seasonalCategory ? (
-            'Update'
-          ) : (
-            'Create'
-          )}
+          {loading ? <CircularProgress size={24} /> : seasonalCategory ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>

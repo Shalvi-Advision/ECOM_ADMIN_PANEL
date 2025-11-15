@@ -8,7 +8,7 @@ import type {
 
 import { apiClient } from 'src/utils/api-client';
 
-// Get all seasonal categories with pagination and sorting
+// Get all seasonal categories with pagination, filtering, and sorting
 export async function getAllSeasonalCategories(
   params: SeasonalCategoriesQueryParams = {}
 ): Promise<PaginatedResponse<SeasonalCategory>> {
