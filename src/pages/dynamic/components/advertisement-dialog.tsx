@@ -19,6 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { createAdvertisement, updateAdvertisement } from 'src/services/advertisements';
 
 import { Iconify } from 'src/components/iconify';
+import { ImageUpload } from 'src/components/image-upload';
 
 interface AdvertisementDialogProps {
   open: boolean;
@@ -292,26 +293,29 @@ export function AdvertisementDialog({
             </Stack>
           </Box>
 
-          <TextField
-            fullWidth
-            label="Banner URL"
+          <ImageUpload
+            label="Banner"
             value={bannerUrl}
-            onChange={(e) => setBannerUrl(e.target.value)}
+            onChange={setBannerUrl}
             required
+            folder="advertisements"
+            helperText="Upload image or enter URL (max 5MB)"
           />
 
           <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Desktop Banner URL (Optional)"
+            <ImageUpload
+              label="Desktop Banner (Optional)"
               value={desktopBanner}
-              onChange={(e) => setDesktopBanner(e.target.value)}
+              onChange={setDesktopBanner}
+              folder="advertisements"
+              helperText="Optional desktop-specific banner"
             />
-            <TextField
-              fullWidth
-              label="Mobile Banner URL (Optional)"
+            <ImageUpload
+              label="Mobile Banner (Optional)"
               value={mobileBanner}
-              onChange={(e) => setMobileBanner(e.target.value)}
+              onChange={setMobileBanner}
+              folder="advertisements"
+              helperText="Optional mobile-specific banner"
             />
           </Stack>
 

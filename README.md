@@ -1,6 +1,5 @@
 # Shalvi Advision - E-commerce Admin Panel
 
-![license](https://img.shields.io/badge/license-MIT-blue.svg)
 
 > Modern React Admin Dashboard for managing e-commerce operations, built with Material-UI, TypeScript, and Vite.js.
 

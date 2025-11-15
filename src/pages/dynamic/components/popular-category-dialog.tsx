@@ -19,6 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { createPopularCategory, updatePopularCategory } from 'src/services/popular-categories';
 
 import { Iconify } from 'src/components/iconify';
+import { ImageUpload } from 'src/components/image-upload';
 
 interface PopularCategoryDialogProps {
   open: boolean;
@@ -258,20 +259,22 @@ export function PopularCategoryDialog({
             </Stack>
           </Box>
 
-          <TextField
-            fullWidth
-            label="Desktop Banner URL"
+          <ImageUpload
+            label="Desktop Banner"
             value={desktopBanner}
-            onChange={(e) => setDesktopBanner(e.target.value)}
+            onChange={setDesktopBanner}
             required
+            folder="popular-categories"
+            helperText="Upload image or enter URL (max 5MB)"
           />
 
-          <TextField
-            fullWidth
-            label="Mobile Banner URL"
+          <ImageUpload
+            label="Mobile Banner"
             value={mobileBanner}
-            onChange={(e) => setMobileBanner(e.target.value)}
+            onChange={setMobileBanner}
             required
+            folder="popular-categories"
+            helperText="Upload image or enter URL (max 5MB)"
           />
 
           <TextField

@@ -19,6 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { createBestSeller, updateBestSeller } from 'src/services/best-sellers';
 
 import { Iconify } from 'src/components/iconify';
+import { ImageUpload } from 'src/components/image-upload';
 
 interface BestSellerDialogProps {
   open: boolean;
@@ -247,20 +248,22 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
             </Stack>
           </Box>
 
-          <TextField
-            fullWidth
-            label="Desktop Banner URL"
+          <ImageUpload
+            label="Desktop Banner"
             value={desktopBanner}
-            onChange={(e) => setDesktopBanner(e.target.value)}
+            onChange={setDesktopBanner}
             required
+            folder="best-sellers"
+            helperText="Upload image or enter URL (max 5MB)"
           />
 
-          <TextField
-            fullWidth
-            label="Mobile Banner URL"
+          <ImageUpload
+            label="Mobile Banner"
             value={mobileBanner}
-            onChange={(e) => setMobileBanner(e.target.value)}
+            onChange={setMobileBanner}
             required
+            folder="best-sellers"
+            helperText="Upload image or enter URL (max 5MB)"
           />
 
           <TextField
