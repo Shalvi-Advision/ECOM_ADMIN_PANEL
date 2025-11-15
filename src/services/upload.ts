@@ -1,4 +1,7 @@
-import { API_BASE_URL } from './config';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+// Get auth token from session storage
+const getAuthToken = (): string | null => sessionStorage.getItem('authToken');
 
 export interface UploadImageResponse {
   url: string;
@@ -12,7 +15,7 @@ export interface UploadImageResponse {
  * Upload a single image to Cloudinary
  */
 export async function uploadImage(file: File, folder: string = 'ecommerce'): Promise<UploadImageResponse> {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
 
   if (!token) {
     throw new Error('Authentication required');
@@ -22,7 +25,7 @@ export async function uploadImage(file: File, folder: string = 'ecommerce'): Pro
   formData.append('image', file);
   formData.append('folder', folder);
 
-  const response = await fetch(`${API_BASE_URL}/upload/image`, {
+  const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -47,7 +50,7 @@ export async function uploadImage(file: File, folder: string = 'ecommerce'): Pro
  * Upload multiple images to Cloudinary
  */
 export async function uploadImages(files: File[], folder: string = 'ecommerce'): Promise<UploadImageResponse[]> {
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
 
   if (!token) {
     throw new Error('Authentication required');
@@ -59,7 +62,7 @@ export async function uploadImages(files: File[], folder: string = 'ecommerce'):
   });
   formData.append('folder', folder);
 
-  const response = await fetch(`${API_BASE_URL}/upload/images`, {
+  const response = await fetch(`${API_BASE_URL}/api/upload/images`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
