@@ -572,3 +572,126 @@ export interface UserActivity {
   activeLastDay: number;
   activeLastWeek: number;
 }
+
+// ========================================
+// Banners Types
+// ========================================
+
+// Banner Action type
+export interface BannerAction {
+  type: 'category' | 'product' | 'url' | 'none';
+  value?: string;
+}
+
+// Banner type matching backend model
+export interface Banner {
+  _id: string;
+  title: string;
+  section_name: string;
+  image_url: string;
+  action: BannerAction;
+  store_code?: string;
+  store_codes?: string[];
+  is_active: boolean;
+  sequence: number;
+  start_date?: string;
+  end_date?: string;
+  metadata?: {
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Banners query parameters
+export interface BannersQueryParams {
+  page?: number;
+  limit?: number;
+  section_name?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Banner create/update payload
+export interface BannerPayload {
+  title: string;
+  section_name: string;
+  image_url: string;
+  action: BannerAction;
+  store_code?: string;
+  store_codes?: string[];
+  is_active: boolean;
+  sequence: number;
+  start_date?: string;
+  end_date?: string;
+  metadata?: {
+    [key: string]: any;
+  };
+}
+
+// ========================================
+// Seasonal Categories Types
+// ========================================
+
+// Seasonal Category Subcategory Item
+export interface SeasonalCategoryItem {
+  sub_category_id: string;
+  store_code?: string;
+  position: number;
+  redirect_url?: string;
+  metadata?: {
+    badge?: string;
+    [key: string]: any;
+  };
+}
+
+// Seasonal Category type matching backend model
+export interface SeasonalCategory {
+  _id: string;
+  title: string;
+  description?: string;
+  banner_urls: {
+    desktop: string;
+    mobile: string;
+  };
+  background_color: string;
+  redirect_url?: string;
+  store_code?: string;
+  store_codes?: string[];
+  season?: 'spring' | 'summer' | 'autumn' | 'fall' | 'winter' | 'holiday' | 'festive' | 'all';
+  subcategories: SeasonalCategoryItem[];
+  is_active: boolean;
+  sequence: number;
+  start_date?: string;
+  end_date?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Seasonal Categories query parameters
+export interface SeasonalCategoriesQueryParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Seasonal Category create/update payload
+export interface SeasonalCategoryPayload {
+  title: string;
+  description?: string;
+  banner_urls: {
+    desktop: string;
+    mobile: string;
+  };
+  background_color: string;
+  redirect_url?: string;
+  store_code?: string;
+  store_codes?: string[];
+  season?: 'spring' | 'summer' | 'autumn' | 'fall' | 'winter' | 'holiday' | 'festive' | 'all';
+  subcategories: SeasonalCategoryItem[];
+  is_active: boolean;
+  sequence: number;
+  start_date?: string;
+  end_date?: string;
+}

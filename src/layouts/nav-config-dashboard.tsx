@@ -99,6 +99,16 @@ export const navData = [
         path: '/dynamic/popular-categories',
         icon: iconify('solar:fire-bold-duotone'),
       },
+      {
+        title: 'Banners',
+        path: '/dynamic/banners',
+        icon: iconify('solar:gallery-bold-duotone'),
+      },
+      {
+        title: 'Seasonal Categories',
+        path: '/dynamic/seasonal-categories',
+        icon: iconify('solar:snowflake-bold-duotone'),
+      },
     ],
   },
 ];

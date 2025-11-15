@@ -28,6 +28,8 @@ export const OutletDeliverySlotsPage = lazy(() => import('src/pages/outlet/deliv
 export const DynamicBestSellersPage = lazy(() => import('src/pages/dynamic/best-sellers'));
 export const DynamicAdvertisementsPage = lazy(() => import('src/pages/dynamic/advertisements'));
 export const DynamicPopularCategoriesPage = lazy(() => import('src/pages/dynamic/popular-categories'));
+export const DynamicBannersPage = lazy(() => import('src/pages/dynamic/banners'));
+export const DynamicSeasonalCategoriesPage = lazy(() => import('src/pages/dynamic/seasonal-categories'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -91,6 +93,8 @@ export const routesSection: RouteObject[] = [
       { path: 'dynamic/best-sellers', element: <DynamicBestSellersPage /> },
       { path: 'dynamic/advertisements', element: <DynamicAdvertisementsPage /> },
       { path: 'dynamic/popular-categories', element: <DynamicPopularCategoriesPage /> },
+      { path: 'dynamic/banners', element: <DynamicBannersPage /> },
+      { path: 'dynamic/seasonal-categories', element: <DynamicSeasonalCategoriesPage /> },
     ],
   },
   {
