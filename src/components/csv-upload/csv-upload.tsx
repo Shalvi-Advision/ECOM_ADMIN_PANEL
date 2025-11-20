@@ -102,7 +102,7 @@ export function CSVUpload({
 
           <Button
             variant="outlined"
-            startIcon={<Iconify icon="eva:cloud-upload-fill" />}
+            startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={handleButtonClick}
           >
             Choose File
@@ -111,7 +111,7 @@ export function CSVUpload({
           <Button
             variant="text"
             size="small"
-            startIcon={<Iconify icon="eva:download-fill" />}
+            startIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
             onClick={handleDownloadTemplate}
           >
             Download Template
@@ -122,7 +122,7 @@ export function CSVUpload({
               variant="text"
               size="small"
               color="error"
-              startIcon={<Iconify icon="eva:close-fill" />}
+              startIcon={<Iconify icon="mingcute:close-line" />}
               onClick={handleClear}
             >
               Clear
@@ -131,7 +131,7 @@ export function CSVUpload({
         </Stack>
 
         {fileName && (
-          <Alert severity="success" icon={<Iconify icon="eva:file-text-fill" />}>
+          <Alert severity="success" icon={<Iconify icon="eva:checkmark-fill" />}>
             <Typography variant="body2">
               <strong>Selected:</strong> {fileName}
             </Typography>
