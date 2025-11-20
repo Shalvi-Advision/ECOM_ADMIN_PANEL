@@ -1,0 +1,4 @@
+p_code,position,badge,tagline,highlight,redirect_url
+PROD001,1,New,Best Quality Product,true,/products/prod001
+PROD002,2,Sale,Limited Time Offer,false,/products/prod002
+PROD003,3,Hot,Trending Now,true,/products/prod003

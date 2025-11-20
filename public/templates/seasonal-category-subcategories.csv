@@ -1,0 +1,4 @@
+sub_category_id,position,redirect_url,store_code
+CAT001,1,/categories/cat001,ST001
+CAT002,2,/categories/cat002,ST002
+CAT003,3,/categories/cat003,ST001

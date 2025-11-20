@@ -1,0 +1,4 @@
+sub_category_id,position,badge,highlight,redirect_url,store_code
+CAT001,1,New,true,/categories/cat001,ST001
+CAT002,2,Hot,false,/categories/cat002,ST002
+CAT003,3,Sale,true,/categories/cat003,ST001

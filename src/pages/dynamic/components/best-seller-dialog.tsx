@@ -16,9 +16,12 @@ import DialogContent from '@mui/material/DialogContent';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { parseBestSellerProducts } from 'src/utils/csv-parser';
+
 import { createBestSeller, updateBestSeller } from 'src/services/best-sellers';
 
 import { Iconify } from 'src/components/iconify';
+import { CSVUpload } from 'src/components/csv-upload';
 import { ImageUpload } from 'src/components/image-upload';
 
 import StoreCodeSelector from './store-code-selector';
@@ -89,6 +92,20 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
 
   const handleRemoveProduct = (index: number) => {
     setProducts(products.filter((_, i) => i !== index));
+  };
+
+  const handleCSVUpload = (content: string) => {
+    try {
+      const parsedProducts = parseBestSellerProducts(content);
+      if (parsedProducts.length === 0) {
+        setError('No valid products found in CSV');
+        return;
+      }
+      setProducts(parsedProducts);
+      setError('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to parse CSV file');
+    }
   };
 
   const handleProductChange = (
@@ -250,7 +267,15 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
               </Button>
             </Stack>
 
-            <Stack spacing={2}>
+            <CSVUpload
+              onUpload={handleCSVUpload}
+              onError={(err) => setError(err)}
+              templateName="best-seller-products.csv"
+              label="Bulk Import Products via CSV"
+              helperText="Upload a CSV file to add multiple products at once. This will replace existing products."
+            />
+
+            <Stack spacing={2} sx={{ mt: 2 }}>
               {products.map((product, index) => (
                 <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                   <Stack spacing={2}>

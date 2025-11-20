@@ -16,9 +16,12 @@ import DialogContent from '@mui/material/DialogContent';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { parsePopularCategoryItems } from 'src/utils/csv-parser';
+
 import { createPopularCategory, updatePopularCategory } from 'src/services/popular-categories';
 
 import { Iconify } from 'src/components/iconify';
+import { CSVUpload } from 'src/components/csv-upload';
 import { ImageUpload } from 'src/components/image-upload';
 
 import StoreCodeSelector from './store-code-selector';
@@ -94,6 +97,20 @@ export function PopularCategoryDialog({
 
   const handleRemoveSubcategory = (index: number) => {
     setSubcategories(subcategories.filter((_, i) => i !== index));
+  };
+
+  const handleCSVUpload = (content: string) => {
+    try {
+      const parsedItems = parsePopularCategoryItems(content);
+      if (parsedItems.length === 0) {
+        setError('No valid subcategories found in CSV');
+        return;
+      }
+      setSubcategories(parsedItems);
+      setError('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to parse CSV file');
+    }
   };
 
   const handleSubcategoryChange = (
@@ -270,7 +287,15 @@ export function PopularCategoryDialog({
               </Button>
             </Stack>
 
-            <Stack spacing={2}>
+            <CSVUpload
+              onUpload={handleCSVUpload}
+              onError={(err) => setError(err)}
+              templateName="popular-category-subcategories.csv"
+              label="Bulk Import Subcategories via CSV"
+              helperText="Upload a CSV file to add multiple subcategories at once. This will replace existing subcategories."
+            />
+
+            <Stack spacing={2} sx={{ mt: 2 }}>
               {subcategories.map((subcategory, index) => (
                 <Box
                   key={index}

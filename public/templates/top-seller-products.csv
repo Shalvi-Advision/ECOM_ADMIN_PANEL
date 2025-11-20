@@ -1,0 +1,4 @@
+p_code,position,badge,tagline,highlight,redirect_url
+PROD001,1,Bestseller,Top Rated,true,/products/prod001
+PROD002,2,Popular,Customer Favorite,false,/products/prod002
+PROD003,3,Trending,Most Viewed,true,/products/prod003
