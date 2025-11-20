@@ -25,6 +25,8 @@ import { createBanner, updateBanner } from 'src/services/banners';
 import { Iconify } from 'src/components/iconify';
 import { ImageUpload } from 'src/components/image-upload';
 
+import StoreCodeSelector from './store-code-selector';
+
 interface BannerDialogProps {
   open: boolean;
   banner: Banner | null;
@@ -41,7 +43,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
   const [sectionName, setSectionName] = useState('');
   const [actionType, setActionType] = useState<'category' | 'product' | 'url' | 'none'>('none');
   const [actionValue, setActionValue] = useState('');
-  const [storeCode, setStoreCode] = useState('');
   const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [sequence, setSequence] = useState(0);
@@ -56,8 +57,12 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
       setSectionName(banner.section_name || '');
       setActionType(banner.action?.type || 'none');
       setActionValue(banner.action?.value || '');
-      setStoreCode(banner.store_code || '');
-      setStoreCodes(banner.store_codes || []);
+      // Combine both store_code and store_codes for backward compatibility
+      const codes = banner.store_codes || [];
+      if (banner.store_code && !codes.includes(banner.store_code)) {
+        codes.push(banner.store_code);
+      }
+      setStoreCodes(codes);
       setIsActive(banner.is_active);
       setSequence(banner.sequence || 0);
       setStartDate(banner.start_date ? new Date(banner.start_date).toISOString().split('T')[0] : '');
@@ -83,7 +88,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
       setSectionName('');
       setActionType('none');
       setActionValue('');
-      setStoreCode('');
       setStoreCodes([]);
       setIsActive(true);
       setSequence(0);
@@ -93,17 +97,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
     }
     setError('');
   }, [banner, open]);
-
-  const handleAddStoreCode = () => {
-    if (storeCode.trim() && !storeCodes.includes(storeCode.trim())) {
-      setStoreCodes([...storeCodes, storeCode.trim()]);
-      setStoreCode('');
-    }
-  };
-
-  const handleRemoveStoreCode = (index: number) => {
-    setStoreCodes(storeCodes.filter((_, i) => i !== index));
-  };
 
   const handleAddBannerAsset = () => {
     if (bannerAssets.length >= 10) {
@@ -180,7 +173,6 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
         type: actionType,
         value: actionType !== 'none' ? actionValue.trim() : undefined,
       },
-      store_code: storeCode.trim() || undefined,
       store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       is_active: isActive,
       sequence,
@@ -389,57 +381,12 @@ export function BannerDialog({ open, banner, onClose, onSuccess }: BannerDialogP
             />
           )}
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Store Code (Single)"
-              value={storeCode}
-              onChange={(e) => setStoreCode(e.target.value)}
-              helperText="Single store code or use the array below"
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Add Store Code to Array"
-                value={storeCode}
-                onChange={(e) => setStoreCode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddStoreCode();
-                  }
-                }}
-              />
-              <Button variant="outlined" onClick={handleAddStoreCode}>
-                Add
-              </Button>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-              {storeCodes.map((code, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                  }}
-                >
-                  <span>{code}</span>
-                  <IconButton size="small" onClick={() => handleRemoveStoreCode(index)}>
-                    <Iconify icon="mingcute:close-line" width={16} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
+          <StoreCodeSelector
+            value={storeCodes}
+            onChange={setStoreCodes}
+            label="Select Store Codes"
+            helperText="Select one or more store codes for this banner"
+          />
 
           <TextField
             fullWidth
