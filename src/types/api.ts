@@ -122,6 +122,54 @@ export interface BestSellerPayload {
   sequence: number;
 }
 
+// Top Seller Product (nested in TopSeller) - same structure as BestSellerProduct
+export interface TopSellerProduct {
+  p_code: string;
+  position: number;
+  metadata?: {
+    badge?: string;
+    tagline?: string;
+    highlight?: boolean;
+    [key: string]: any;
+  };
+  redirect_url?: string;
+  store_code?: string;
+}
+
+// Top Seller type matching backend model
+export interface TopSeller {
+  _id: string;
+  store_code?: string;
+  store_codes?: string[];
+  bg_color: string;
+  title: string;
+  products?: TopSellerProduct[];
+  is_active: boolean;
+  sequence: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Top Sellers query parameters
+export interface TopSellersQueryParams {
+  page?: number;
+  limit?: number;
+  store_code?: string;
+  is_active?: boolean;
+  sort?: string;
+}
+
+// Top Seller create/update payload
+export interface TopSellerPayload {
+  store_code?: string;
+  store_codes?: string[];
+  bg_color: string;
+  title: string;
+  products?: TopSellerProduct[];
+  is_active: boolean;
+  sequence: number;
+}
+
 // Advertisement Product (nested in Advertisement)
 export interface AdvertisementProduct {
   p_code: string;

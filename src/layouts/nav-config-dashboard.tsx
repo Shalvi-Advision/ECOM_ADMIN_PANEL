@@ -90,6 +90,11 @@ export const navData = [
         icon: iconify('solar:star-bold-duotone'),
       },
       {
+        title: 'Top Sellers',
+        path: '/dynamic/top-sellers',
+        icon: iconify('solar:trophy-bold-duotone'),
+      },
+      {
         title: 'Advertisements',
         path: '/dynamic/advertisements',
         icon: iconify('solar:megaphone-bold-duotone'),

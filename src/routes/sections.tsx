@@ -26,6 +26,7 @@ export const OutletStoresPage = lazy(() => import('src/pages/outlet/stores'));
 export const OutletPaymentModesPage = lazy(() => import('src/pages/outlet/payment-modes'));
 export const OutletDeliverySlotsPage = lazy(() => import('src/pages/outlet/delivery-slots'));
 export const DynamicBestSellersPage = lazy(() => import('src/pages/dynamic/best-sellers'));
+export const DynamicTopSellersPage = lazy(() => import('src/pages/dynamic/top-sellers'));
 export const DynamicAdvertisementsPage = lazy(() => import('src/pages/dynamic/advertisements'));
 export const DynamicPopularCategoriesPage = lazy(() => import('src/pages/dynamic/popular-categories'));
 export const DynamicBannersPage = lazy(() => import('src/pages/dynamic/banners'));
@@ -91,6 +92,7 @@ export const routesSection: RouteObject[] = [
       { path: 'outlet/payment-modes', element: <OutletPaymentModesPage /> },
       { path: 'outlet/delivery-slots', element: <OutletDeliverySlotsPage /> },
       { path: 'dynamic/best-sellers', element: <DynamicBestSellersPage /> },
+      { path: 'dynamic/top-sellers', element: <DynamicTopSellersPage /> },
       { path: 'dynamic/advertisements', element: <DynamicAdvertisementsPage /> },
       { path: 'dynamic/popular-categories', element: <DynamicPopularCategoriesPage /> },
       { path: 'dynamic/banners', element: <DynamicBannersPage /> },
