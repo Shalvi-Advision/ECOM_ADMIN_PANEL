@@ -21,6 +21,8 @@ import { createBestSeller, updateBestSeller } from 'src/services/best-sellers';
 import { Iconify } from 'src/components/iconify';
 import { ImageUpload } from 'src/components/image-upload';
 
+import StoreCodeSelector from './store-code-selector';
+
 interface BestSellerDialogProps {
   open: boolean;
   bestSeller: BestSeller | null;
@@ -35,7 +37,6 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [storeCode, setStoreCode] = useState('');
   const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [desktopBanner, setDesktopBanner] = useState('');
   const [mobileBanner, setMobileBanner] = useState('');
@@ -50,8 +51,12 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
     if (bestSeller) {
       setTitle(bestSeller.title || '');
       setDescription(bestSeller.description || '');
-      setStoreCode(bestSeller.store_code || '');
-      setStoreCodes(bestSeller.store_codes || []);
+      // Combine both store_code and store_codes for backward compatibility
+      const codes = bestSeller.store_codes || [];
+      if (bestSeller.store_code && !codes.includes(bestSeller.store_code)) {
+        codes.push(bestSeller.store_code);
+      }
+      setStoreCodes(codes);
       setDesktopBanner(bestSeller.banner_urls?.desktop || '');
       setMobileBanner(bestSeller.banner_urls?.mobile || '');
       setBackgroundColor(bestSeller.background_color || '#ffffff');
@@ -63,7 +68,6 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
       // Reset form for create
       setTitle('');
       setDescription('');
-      setStoreCode('');
       setStoreCodes([]);
       setDesktopBanner('');
       setMobileBanner('');
@@ -75,17 +79,6 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
     }
     setError('');
   }, [bestSeller, open]);
-
-  const handleAddStoreCode = () => {
-    if (storeCode.trim() && !storeCodes.includes(storeCode.trim())) {
-      setStoreCodes([...storeCodes, storeCode.trim()]);
-      setStoreCode('');
-    }
-  };
-
-  const handleRemoveStoreCode = (index: number) => {
-    setStoreCodes(storeCodes.filter((_, i) => i !== index));
-  };
 
   const handleAddProduct = () => {
     setProducts([
@@ -144,7 +137,6 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
     const payload: BestSellerPayload = {
       title: title.trim(),
       description: description.trim() || undefined,
-      store_code: storeCode.trim() || undefined,
       store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       banner_urls: {
         desktop: desktopBanner.trim(),
@@ -196,57 +188,12 @@ export function BestSellerDialog({ open, bestSeller, onClose, onSuccess }: BestS
             rows={2}
           />
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Store Code (Single)"
-              value={storeCode}
-              onChange={(e) => setStoreCode(e.target.value)}
-              helperText="Single store code or use the array below"
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Add Store Code to Array"
-                value={storeCode}
-                onChange={(e) => setStoreCode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddStoreCode();
-                  }
-                }}
-              />
-              <Button variant="outlined" onClick={handleAddStoreCode}>
-                Add
-              </Button>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-              {storeCodes.map((code, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                  }}
-                >
-                  <span>{code}</span>
-                  <IconButton size="small" onClick={() => handleRemoveStoreCode(index)}>
-                    <Iconify icon="mingcute:close-line" width={16} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
+          <StoreCodeSelector
+            value={storeCodes}
+            onChange={setStoreCodes}
+            label="Select Store Codes"
+            helperText="Select one or more store codes for this best seller section"
+          />
 
           <ImageUpload
             label="Desktop Banner"

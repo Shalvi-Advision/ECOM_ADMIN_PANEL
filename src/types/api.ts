@@ -753,3 +753,9 @@ export interface SeasonalCategoryPayload {
   start_date?: string;
   end_date?: string;
 }
+
+// Store Code type for admin dropdown
+export interface StoreCode {
+  store_code: string;
+  store_name: string;
+}

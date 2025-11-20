@@ -21,6 +21,8 @@ import { createAdvertisement, updateAdvertisement } from 'src/services/advertise
 import { Iconify } from 'src/components/iconify';
 import { ImageUpload } from 'src/components/image-upload';
 
+import StoreCodeSelector from './store-code-selector';
+
 interface AdvertisementDialogProps {
   open: boolean;
   advertisement: Advertisement | null;
@@ -41,7 +43,6 @@ export function AdvertisementDialog({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  const [storeCode, setStoreCode] = useState('');
   const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [bannerUrl, setBannerUrl] = useState('');
   const [desktopBanner, setDesktopBanner] = useState('');
@@ -60,8 +61,12 @@ export function AdvertisementDialog({
       setTitle(advertisement.title || '');
       setDescription(advertisement.description || '');
       setCategory(advertisement.category || '');
-      setStoreCode(advertisement.store_code || '');
-      setStoreCodes(advertisement.store_codes || []);
+      // Combine both store_code and store_codes for backward compatibility
+      const codes = advertisement.store_codes || [];
+      if (advertisement.store_code && !codes.includes(advertisement.store_code)) {
+        codes.push(advertisement.store_code);
+      }
+      setStoreCodes(codes);
       setBannerUrl(advertisement.banner_url || '');
       setDesktopBanner(advertisement.banner_urls?.desktop || '');
       setMobileBanner(advertisement.banner_urls?.mobile || '');
@@ -77,7 +82,6 @@ export function AdvertisementDialog({
       setTitle('');
       setDescription('');
       setCategory('');
-      setStoreCode('');
       setStoreCodes([]);
       setBannerUrl('');
       setDesktopBanner('');
@@ -92,17 +96,6 @@ export function AdvertisementDialog({
     }
     setError('');
   }, [advertisement, open]);
-
-  const handleAddStoreCode = () => {
-    if (storeCode.trim() && !storeCodes.includes(storeCode.trim())) {
-      setStoreCodes([...storeCodes, storeCode.trim()]);
-      setStoreCode('');
-    }
-  };
-
-  const handleRemoveStoreCode = (index: number) => {
-    setStoreCodes(storeCodes.filter((_, i) => i !== index));
-  };
 
   const handleAddProduct = () => {
     setProducts([...products, { p_code: '', position: products.length + 1, redirect_url: '' }]);
@@ -172,7 +165,6 @@ export function AdvertisementDialog({
       title: title.trim(),
       description: description.trim() || undefined,
       category: category.trim(),
-      store_code: storeCode.trim() || undefined,
       store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       banner_url: bannerUrl.trim(),
       banner_urls:
@@ -241,57 +233,12 @@ export function AdvertisementDialog({
             helperText="e.g., homepage, banner, popup"
           />
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Store Code (Single)"
-              value={storeCode}
-              onChange={(e) => setStoreCode(e.target.value)}
-              helperText="Single store code or use the array below"
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Add Store Code to Array"
-                value={storeCode}
-                onChange={(e) => setStoreCode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddStoreCode();
-                  }
-                }}
-              />
-              <Button variant="outlined" onClick={handleAddStoreCode}>
-                Add
-              </Button>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-              {storeCodes.map((code, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                  }}
-                >
-                  <span>{code}</span>
-                  <IconButton size="small" onClick={() => handleRemoveStoreCode(index)}>
-                    <Iconify icon="mingcute:close-line" width={16} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
+          <StoreCodeSelector
+            value={storeCodes}
+            onChange={setStoreCodes}
+            label="Select Store Codes"
+            helperText="Select one or more store codes for this advertisement"
+          />
 
           <ImageUpload
             label="Banner"

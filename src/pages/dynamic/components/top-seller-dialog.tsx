@@ -20,6 +20,8 @@ import { createTopSeller, updateTopSeller } from 'src/services/top-sellers';
 
 import { Iconify } from 'src/components/iconify';
 
+import StoreCodeSelector from './store-code-selector';
+
 interface TopSellerDialogProps {
   open: boolean;
   topSeller: TopSeller | null;
@@ -33,7 +35,6 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
 
   // Form state
   const [title, setTitle] = useState('');
-  const [storeCode, setStoreCode] = useState('');
   const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [bgColor, setBgColor] = useState('#ffffff');
   const [isActive, setIsActive] = useState(true);
@@ -44,8 +45,12 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
   useEffect(() => {
     if (topSeller) {
       setTitle(topSeller.title || '');
-      setStoreCode(topSeller.store_code || '');
-      setStoreCodes(topSeller.store_codes || []);
+      // Combine both store_code and store_codes for backward compatibility
+      const codes = topSeller.store_codes || [];
+      if (topSeller.store_code && !codes.includes(topSeller.store_code)) {
+        codes.push(topSeller.store_code);
+      }
+      setStoreCodes(codes);
       setBgColor(topSeller.bg_color || '#ffffff');
       setIsActive(topSeller.is_active);
       setSequence(topSeller.sequence || 0);
@@ -53,7 +58,6 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
     } else {
       // Reset form for create
       setTitle('');
-      setStoreCode('');
       setStoreCodes([]);
       setBgColor('#ffffff');
       setIsActive(true);
@@ -62,17 +66,6 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
     }
     setError('');
   }, [topSeller, open]);
-
-  const handleAddStoreCode = () => {
-    if (storeCode.trim() && !storeCodes.includes(storeCode.trim())) {
-      setStoreCodes([...storeCodes, storeCode.trim()]);
-      setStoreCode('');
-    }
-  };
-
-  const handleRemoveStoreCode = (index: number) => {
-    setStoreCodes(storeCodes.filter((_, i) => i !== index));
-  };
 
   const handleAddProduct = () => {
     setProducts([
@@ -126,7 +119,6 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
 
     const payload: TopSellerPayload = {
       title: title.trim(),
-      store_code: storeCode.trim() || undefined,
       store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       bg_color: bgColor.trim(),
       is_active: isActive,
@@ -164,57 +156,12 @@ export function TopSellerDialog({ open, topSeller, onClose, onSuccess }: TopSell
             required
           />
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Store Code (Single)"
-              value={storeCode}
-              onChange={(e) => setStoreCode(e.target.value)}
-              helperText="Single store code or use the array below"
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Add Store Code to Array"
-                value={storeCode}
-                onChange={(e) => setStoreCode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddStoreCode();
-                  }
-                }}
-              />
-              <Button variant="outlined" onClick={handleAddStoreCode}>
-                Add
-              </Button>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-              {storeCodes.map((code, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                  }}
-                >
-                  <span>{code}</span>
-                  <IconButton size="small" onClick={() => handleRemoveStoreCode(index)}>
-                    <Iconify icon="mingcute:close-line" width={16} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
+          <StoreCodeSelector
+            value={storeCodes}
+            onChange={setStoreCodes}
+            label="Select Store Codes"
+            helperText="Select one or more store codes for this top seller section"
+          />
 
           <TextField
             fullWidth

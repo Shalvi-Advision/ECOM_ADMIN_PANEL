@@ -21,6 +21,8 @@ import { createPopularCategory, updatePopularCategory } from 'src/services/popul
 import { Iconify } from 'src/components/iconify';
 import { ImageUpload } from 'src/components/image-upload';
 
+import StoreCodeSelector from './store-code-selector';
+
 interface PopularCategoryDialogProps {
   open: boolean;
   popularCategory: PopularCategory | null;
@@ -40,7 +42,6 @@ export function PopularCategoryDialog({
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [storeCode, setStoreCode] = useState('');
   const [storeCodes, setStoreCodes] = useState<string[]>([]);
   const [desktopBanner, setDesktopBanner] = useState('');
   const [mobileBanner, setMobileBanner] = useState('');
@@ -55,8 +56,12 @@ export function PopularCategoryDialog({
     if (popularCategory) {
       setTitle(popularCategory.title || '');
       setDescription(popularCategory.description || '');
-      setStoreCode(popularCategory.store_code || '');
-      setStoreCodes(popularCategory.store_codes || []);
+      // Combine both store_code and store_codes for backward compatibility
+      const codes = popularCategory.store_codes || [];
+      if (popularCategory.store_code && !codes.includes(popularCategory.store_code)) {
+        codes.push(popularCategory.store_code);
+      }
+      setStoreCodes(codes);
       setDesktopBanner(popularCategory.banner_urls?.desktop || '');
       setMobileBanner(popularCategory.banner_urls?.mobile || '');
       setBackgroundColor(popularCategory.background_color || '#ffffff');
@@ -68,7 +73,6 @@ export function PopularCategoryDialog({
       // Reset form for create
       setTitle('');
       setDescription('');
-      setStoreCode('');
       setStoreCodes([]);
       setDesktopBanner('');
       setMobileBanner('');
@@ -80,17 +84,6 @@ export function PopularCategoryDialog({
     }
     setError('');
   }, [popularCategory, open]);
-
-  const handleAddStoreCode = () => {
-    if (storeCode.trim() && !storeCodes.includes(storeCode.trim())) {
-      setStoreCodes([...storeCodes, storeCode.trim()]);
-      setStoreCode('');
-    }
-  };
-
-  const handleRemoveStoreCode = (index: number) => {
-    setStoreCodes(storeCodes.filter((_, i) => i !== index));
-  };
 
   const handleAddSubcategory = () => {
     setSubcategories([
@@ -153,7 +146,6 @@ export function PopularCategoryDialog({
     const payload: PopularCategoryPayload = {
       title: title.trim(),
       description: description.trim() || undefined,
-      store_code: storeCode.trim() || undefined,
       store_codes: storeCodes.length > 0 ? storeCodes : undefined,
       banner_urls: {
         desktop: desktopBanner.trim(),
@@ -207,57 +199,12 @@ export function PopularCategoryDialog({
             rows={2}
           />
 
-          <Stack direction="row" spacing={2}>
-            <TextField
-              fullWidth
-              label="Store Code (Single)"
-              value={storeCode}
-              onChange={(e) => setStoreCode(e.target.value)}
-              helperText="Single store code or use the array below"
-            />
-          </Stack>
-
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Add Store Code to Array"
-                value={storeCode}
-                onChange={(e) => setStoreCode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddStoreCode();
-                  }
-                }}
-              />
-              <Button variant="outlined" onClick={handleAddStoreCode}>
-                Add
-              </Button>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-              {storeCodes.map((code, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.5,
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                  }}
-                >
-                  <span>{code}</span>
-                  <IconButton size="small" onClick={() => handleRemoveStoreCode(index)}>
-                    <Iconify icon="mingcute:close-line" width={16} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
+          <StoreCodeSelector
+            value={storeCodes}
+            onChange={setStoreCodes}
+            label="Select Store Codes"
+            helperText="Select one or more store codes for this popular category"
+          />
 
           <ImageUpload
             label="Desktop Banner"
