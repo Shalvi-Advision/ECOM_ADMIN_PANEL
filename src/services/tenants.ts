@@ -97,3 +97,42 @@ export async function deleteTenant(
     ctl()
   );
 }
+
+// ---- Custom domain lifecycle (plan §10.4): pending -> approved -> live -------
+
+export interface DomainResult {
+  customDomain: string;
+  domainStatus: 'none' | 'pending' | 'approved' | 'live' | 'failed';
+  cname?: { host: string; target: string };
+  instructions?: string;
+}
+
+// Register/replace a tenant's custom domain -> pending. Returns CNAME to show.
+export async function setTenantDomain(
+  slug: string,
+  customDomain: string
+): Promise<ApiResponse<DomainResult>> {
+  return apiClient.patch<ApiResponse<DomainResult>>(
+    `/api/admin/tenants/${slug}/domain`,
+    { customDomain },
+    ctl()
+  );
+}
+
+// Approve a pending domain (DNS confirmed) -> approved (cert issues on first hit).
+export async function approveTenantDomain(slug: string): Promise<ApiResponse<DomainResult>> {
+  return apiClient.patch<ApiResponse<DomainResult>>(
+    `/api/admin/tenants/${slug}/domain/approve`,
+    undefined,
+    ctl()
+  );
+}
+
+// Flip approved -> live once the cert is confirmed serving.
+export async function markTenantDomainLive(slug: string): Promise<ApiResponse<DomainResult>> {
+  return apiClient.patch<ApiResponse<DomainResult>>(
+    `/api/admin/tenants/${slug}/domain/mark-live`,
+    undefined,
+    ctl()
+  );
+}

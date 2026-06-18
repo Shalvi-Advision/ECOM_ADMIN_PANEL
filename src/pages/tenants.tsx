@@ -30,6 +30,7 @@ import { getTenants, deleteTenant, resumeTenant, suspendTenant } from 'src/servi
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
+import { DomainDialog } from 'src/sections/tenants/domain-dialog';
 import { TenantWizardDialog } from 'src/sections/tenants/tenant-wizard-dialog';
 import { PlatformLoginDialog } from 'src/sections/tenants/platform-login-dialog';
 
@@ -42,6 +43,19 @@ const STATUS_COLOR: Record<TenantStatus, 'success' | 'warning' | 'error' | 'defa
   deleted: 'default',
 };
 
+type DomainStatus = NonNullable<Tenant['domainStatus']>;
+
+const DOMAIN_STATUS_COLOR: Record<
+  DomainStatus,
+  'success' | 'warning' | 'info' | 'error' | 'default'
+> = {
+  none: 'default',
+  pending: 'warning',
+  approved: 'info',
+  live: 'success',
+  failed: 'error',
+};
+
 type PendingAction = { tenant: Tenant; action: 'suspend' | 'resume' | 'delete' } | null;
 
 export default function Page() {
@@ -52,6 +66,7 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(!isPlatformAuthenticated());
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [domainSlug, setDomainSlug] = useState<string | null>(null);
 
   const fetchTenants = useCallback(async () => {
     if (!isPlatformAuthenticated()) {
@@ -177,7 +192,21 @@ export default function Page() {
                           </TableCell>
                           <TableCell>{tenant.slug}</TableCell>
                           <TableCell>{tenant.subdomain}</TableCell>
-                          <TableCell>{tenant.customDomain || '—'}</TableCell>
+                          <TableCell>
+                            {tenant.domainStatus && tenant.domainStatus !== 'none' ? (
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="body2">{tenant.customDomain || '—'}</Typography>
+                                <Chip
+                                  size="small"
+                                  label={tenant.domainStatus}
+                                  color={DOMAIN_STATUS_COLOR[tenant.domainStatus]}
+                                  sx={{ textTransform: 'capitalize' }}
+                                />
+                              </Stack>
+                            ) : (
+                              '—'
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Chip
                               size="small"
@@ -188,6 +217,16 @@ export default function Page() {
                           </TableCell>
                           <TableCell align="right">
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <Button
+                                size="small"
+                                color="inherit"
+                                variant="outlined"
+                                disabled={tenant.status === 'deleted'}
+                                startIcon={<Iconify icon={'solar:global-bold-duotone' as any} />}
+                                onClick={() => setDomainSlug(tenant.slug)}
+                              >
+                                Domain
+                              </Button>
                               {tenant.status === 'suspended' ? (
                                 <Button
                                   size="small"
@@ -266,6 +305,13 @@ export default function Page() {
           setWizardOpen(false);
           fetchTenants();
         }}
+      />
+
+      <DomainDialog
+        open={!!domainSlug}
+        tenant={tenants.find((t) => t.slug === domainSlug) ?? null}
+        onClose={() => setDomainSlug(null)}
+        onChanged={fetchTenants}
       />
     </>
   );
