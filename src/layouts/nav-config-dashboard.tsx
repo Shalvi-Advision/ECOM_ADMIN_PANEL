@@ -144,6 +144,12 @@ export const navData: NavItem[] = [
     ],
   },
   {
+    title: 'Tenants',
+    path: '/tenants',
+    icon: iconify('solar:buildings-3-bold-duotone'),
+    superAdminOnly: true,
+  },
+  {
     title: 'Admin Permissions',
     path: '/admin-permissions',
     icon: iconify('solar:shield-keyhole-bold-duotone'),

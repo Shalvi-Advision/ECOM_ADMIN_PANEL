@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'src/routes/hooks';
 
 import { ThemeProvider } from 'src/theme/theme-provider';
+import { TenantProvider } from 'src/contexts/tenant-context';
 import { StoreCodeProvider } from 'src/contexts/store-code-context';
 import { PermissionsProvider } from 'src/contexts/permissions-context';
 
@@ -20,9 +21,11 @@ export default function App({ children }: AppProps) {
   return (
     <ThemeProvider>
       <PermissionsProvider>
-        <StoreCodeProvider>
-          {children}
-        </StoreCodeProvider>
+        <TenantProvider>
+          <StoreCodeProvider>
+            {children}
+          </StoreCodeProvider>
+        </TenantProvider>
       </PermissionsProvider>
     </ThemeProvider>
   );

@@ -1,5 +1,7 @@
 // API Client utility for making HTTP requests
 
+import { getSelectedTenant } from 'src/contexts/tenant-context';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5008';
 
 // Get auth token from session storage
@@ -45,6 +47,15 @@ async function apiFetch<T>(
   // Add Authorization header if token exists
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  // When a super-admin has selected a tenant to act on, send it as X-Tenant so
+  // the backend scopes business requests to that tenant. Store-admins never set
+  // a selection, so this is absent and their tenant is resolved from the JWT/Host.
+  // Control-plane routes (/api/admin/platform, /api/admin/tenants) ignore it.
+  const selectedTenant = getSelectedTenant();
+  if (selectedTenant && !headers['X-Tenant']) {
+    headers['X-Tenant'] = selectedTenant;
   }
 
   const config: RequestInit = {

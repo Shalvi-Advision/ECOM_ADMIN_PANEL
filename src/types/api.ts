@@ -880,3 +880,35 @@ export interface OffersQueryParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
+
+// Control-plane tenant (platform super-admin view). No secrets — mirrors the
+// projection returned by GET /api/admin/tenants. (Multi-tenant Phase 5)
+export type TenantStatus = 'provisioning' | 'active' | 'suspended' | 'deleted';
+
+export interface Tenant {
+  name: string;
+  slug: string;
+  subdomain: string;
+  customDomain?: string | null;
+  domainStatus?: 'none' | 'pending' | 'approved' | 'live' | 'failed';
+  dbName: string;
+  status: TenantStatus;
+  branding?: {
+    appName?: string;
+    logoUrl?: string;
+  };
+  goLiveChecklist?: {
+    razorpay?: boolean;
+    sms?: boolean;
+    catalog?: boolean;
+    adminUser?: boolean;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TenantListResponse {
+  success: boolean;
+  count: number;
+  data: Tenant[];
+}

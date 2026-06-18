@@ -35,6 +35,7 @@ export const DynamicBannersPage = lazy(() => import('src/pages/dynamic/banners')
 export const DynamicSeasonalCategoriesPage = lazy(() => import('src/pages/dynamic/seasonal-categories'));
 export const OffersPage = lazy(() => import('src/pages/offers'));
 export const AdminPermissionsPage = lazy(() => import('src/pages/admin-permissions'));
+export const TenantsPage = lazy(() => import('src/pages/tenants'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -105,6 +106,7 @@ export const routesSection: RouteObject[] = [
       { path: 'dynamic/banners', element: <PermissionGuard section="dynamicSection"><DynamicBannersPage /></PermissionGuard> },
       { path: 'dynamic/seasonal-categories', element: <PermissionGuard section="dynamicSection"><DynamicSeasonalCategoriesPage /></PermissionGuard> },
       { path: 'admin-permissions', element: <AdminPermissionsPage /> },
+      { path: 'tenants', element: <TenantsPage /> },
     ],
   },
   {
