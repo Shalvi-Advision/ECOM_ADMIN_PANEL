@@ -24,10 +24,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { CONFIG } from 'src/config-global';
-import { getTenants, resumeTenant, suspendTenant } from 'src/services/tenants';
+import { isPlatformAuthenticated } from 'src/services/platform-auth';
+import { getTenants, deleteTenant, resumeTenant, suspendTenant } from 'src/services/tenants';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+
+import { TenantWizardDialog } from 'src/sections/tenants/tenant-wizard-dialog';
+import { PlatformLoginDialog } from 'src/sections/tenants/platform-login-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -38,7 +42,7 @@ const STATUS_COLOR: Record<TenantStatus, 'success' | 'warning' | 'error' | 'defa
   deleted: 'default',
 };
 
-type PendingAction = { tenant: Tenant; action: 'suspend' | 'resume' } | null;
+type PendingAction = { tenant: Tenant; action: 'suspend' | 'resume' | 'delete' } | null;
 
 export default function Page() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -46,8 +50,15 @@ export default function Page() {
   const [error, setError] = useState<string>('');
   const [pending, setPending] = useState<PendingAction>(null);
   const [busy, setBusy] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(!isPlatformAuthenticated());
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const fetchTenants = useCallback(async () => {
+    if (!isPlatformAuthenticated()) {
+      setNeedsLogin(true);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError('');
@@ -56,13 +67,22 @@ export default function Page() {
         setTenants(response.data);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load tenants');
+      if (err?.status === 401 || err?.statusCode === 401) {
+        setNeedsLogin(true);
+      } else {
+        setError(err.message || 'Failed to load tenants');
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    fetchTenants();
+  }, [fetchTenants]);
+
+  const handleLoginSuccess = useCallback(() => {
+    setNeedsLogin(false);
     fetchTenants();
   }, [fetchTenants]);
 
@@ -73,8 +93,10 @@ export default function Page() {
       setError('');
       if (pending.action === 'suspend') {
         await suspendTenant(pending.tenant.slug);
-      } else {
+      } else if (pending.action === 'resume') {
         await resumeTenant(pending.tenant.slug);
+      } else {
+        await deleteTenant(pending.tenant.slug);
       }
       setPending(null);
       await fetchTenants();
@@ -93,13 +115,23 @@ export default function Page() {
         <Stack spacing={3}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h4">Tenants</Typography>
-            <Button
-              variant="outlined"
-              startIcon={<Iconify icon={'solar:refresh-bold-duotone' as any} />}
-              onClick={fetchTenants}
-            >
-              Refresh
-            </Button>
+            <Stack direction="row" spacing={1.5}>
+              <Button
+                variant="outlined"
+                startIcon={<Iconify icon={'solar:refresh-bold-duotone' as any} />}
+                onClick={fetchTenants}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon={'mingcute:add-line' as any} />}
+                onClick={() => setWizardOpen(true)}
+                disabled={needsLogin}
+              >
+                Create Tenant
+              </Button>
+            </Stack>
           </Stack>
 
           {error && (
@@ -155,26 +187,37 @@ export default function Page() {
                             />
                           </TableCell>
                           <TableCell align="right">
-                            {tenant.status === 'suspended' ? (
-                              <Button
-                                size="small"
-                                color="success"
-                                variant="outlined"
-                                onClick={() => setPending({ tenant, action: 'resume' })}
-                              >
-                                Resume
-                              </Button>
-                            ) : (
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              {tenant.status === 'suspended' ? (
+                                <Button
+                                  size="small"
+                                  color="success"
+                                  variant="outlined"
+                                  onClick={() => setPending({ tenant, action: 'resume' })}
+                                >
+                                  Resume
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="small"
+                                  color="error"
+                                  variant="outlined"
+                                  disabled={tenant.status === 'deleted'}
+                                  onClick={() => setPending({ tenant, action: 'suspend' })}
+                                >
+                                  Suspend
+                                </Button>
+                              )}
                               <Button
                                 size="small"
                                 color="error"
-                                variant="outlined"
+                                variant="contained"
                                 disabled={tenant.status === 'deleted'}
-                                onClick={() => setPending({ tenant, action: 'suspend' })}
+                                onClick={() => setPending({ tenant, action: 'delete' })}
                               >
-                                Suspend
+                                Delete
                               </Button>
-                            )}
+                            </Stack>
                           </TableCell>
                         </TableRow>
                       ))
@@ -191,9 +234,12 @@ export default function Page() {
         <DialogTitle sx={{ textTransform: 'capitalize' }}>{pending?.action} tenant</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {pending?.action === 'suspend'
-              ? `Suspend "${pending?.tenant.name}"? Its storefront and admin will stop working until resumed.`
-              : `Resume "${pending?.tenant.name}"? Its storefront and admin will become reachable again.`}
+            {pending?.action === 'suspend' &&
+              `Suspend "${pending?.tenant.name}"? Its storefront and admin will stop working until resumed.`}
+            {pending?.action === 'resume' &&
+              `Resume "${pending?.tenant.name}"? Its storefront and admin will become reachable again.`}
+            {pending?.action === 'delete' &&
+              `Delete "${pending?.tenant.name}"? This drops its database and marks it deleted. This cannot be undone.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -203,13 +249,24 @@ export default function Page() {
           <Button
             onClick={confirmAction}
             disabled={busy}
-            color={pending?.action === 'suspend' ? 'error' : 'success'}
+            color={pending?.action === 'resume' ? 'success' : 'error'}
             variant="contained"
           >
             {busy ? <CircularProgress size={20} /> : <Box component="span">Confirm</Box>}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <PlatformLoginDialog open={needsLogin} onSuccess={handleLoginSuccess} />
+
+      <TenantWizardDialog
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={() => {
+          setWizardOpen(false);
+          fetchTenants();
+        }}
+      />
     </>
   );
 }
