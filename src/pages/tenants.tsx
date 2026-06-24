@@ -31,7 +31,9 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { DomainDialog } from 'src/sections/tenants/domain-dialog';
+import { TenantEditDialog } from 'src/sections/tenants/tenant-edit-dialog';
 import { TenantWizardDialog } from 'src/sections/tenants/tenant-wizard-dialog';
+import { TenantDetailsDialog } from 'src/sections/tenants/tenant-details-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -74,6 +76,8 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [domainSlug, setDomainSlug] = useState<string | null>(null);
+  const [detailsSlug, setDetailsSlug] = useState<string | null>(null);
+  const [editTenant, setEditTenant] = useState<Tenant | null>(null);
 
   const fetchTenants = useCallback(async () => {
     try {
@@ -221,6 +225,25 @@ export default function Page() {
                                 size="small"
                                 color="inherit"
                                 variant="outlined"
+                                startIcon={<Iconify icon={'solar:eye-bold-duotone' as any} />}
+                                onClick={() => setDetailsSlug(tenant.slug)}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                size="small"
+                                color="inherit"
+                                variant="outlined"
+                                disabled={tenant.status === 'deleted'}
+                                startIcon={<Iconify icon={'solar:pen-bold-duotone' as any} />}
+                                onClick={() => setEditTenant(tenant)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="small"
+                                color="inherit"
+                                variant="outlined"
                                 disabled={tenant.status === 'deleted'}
                                 startIcon={<Iconify icon={'solar:global-bold-duotone' as any} />}
                                 onClick={() => setDomainSlug(tenant.slug)}
@@ -310,6 +333,23 @@ export default function Page() {
         tenant={tenants.find((t) => t.slug === domainSlug) ?? null}
         onClose={() => setDomainSlug(null)}
         onChanged={fetchTenants}
+      />
+
+      <TenantDetailsDialog
+        open={!!detailsSlug}
+        slug={detailsSlug}
+        onClose={() => setDetailsSlug(null)}
+        onEdit={(t) => {
+          setDetailsSlug(null);
+          setEditTenant(t);
+        }}
+      />
+
+      <TenantEditDialog
+        open={!!editTenant}
+        tenant={editTenant}
+        onClose={() => setEditTenant(null)}
+        onSaved={fetchTenants}
       />
     </>
   );

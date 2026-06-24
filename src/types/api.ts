@@ -896,7 +896,15 @@ export interface Tenant {
   branding?: {
     appName?: string;
     logoUrl?: string;
+    faviconUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    themeColor?: string;
+    supportEmail?: string;
+    supportPhone?: string;
+    footerText?: string;
   };
+  features?: Record<string, boolean>;
   goLiveChecklist?: {
     razorpay?: boolean;
     sms?: boolean;

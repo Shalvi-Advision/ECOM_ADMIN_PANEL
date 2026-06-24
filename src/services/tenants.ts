@@ -98,6 +98,36 @@ export async function deleteTenant(
   );
 }
 
+// One tenant's full platform record (no secrets) — for the details/edit view.
+export async function getTenant(slug: string): Promise<ApiResponse<Tenant>> {
+  return apiClient.get<ApiResponse<Tenant>>(`/api/admin/tenants/${slug}`, ctl());
+}
+
+// Editable subset of a tenant: display name + branding. slug/subdomain/dbName are
+// immutable; status uses suspend/resume; customDomain uses the domain routes.
+export interface UpdateTenantInput {
+  name?: string;
+  branding?: {
+    appName?: string;
+    logoUrl?: string;
+    faviconUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    themeColor?: string;
+    supportEmail?: string;
+    supportPhone?: string;
+    footerText?: string;
+  };
+}
+
+// Edit a tenant's name/branding. Returns the updated record.
+export async function updateTenant(
+  slug: string,
+  input: UpdateTenantInput
+): Promise<ApiResponse<Tenant>> {
+  return apiClient.patch<ApiResponse<Tenant>>(`/api/admin/tenants/${slug}`, input, ctl());
+}
+
 // ---- Custom domain lifecycle (plan §10.4): pending -> approved -> live -------
 
 export interface DomainResult {
