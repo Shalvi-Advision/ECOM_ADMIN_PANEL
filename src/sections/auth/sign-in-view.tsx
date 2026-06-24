@@ -7,8 +7,6 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { useRouter } from 'src/routes/hooks';
-
 import { sendOtp, verifyOtp } from 'src/services/auth';
 
 // ----------------------------------------------------------------------
@@ -16,8 +14,6 @@ import { sendOtp, verifyOtp } from 'src/services/auth';
 type AuthStep = 'mobile' | 'otp';
 
 export function SignInView() {
-  const router = useRouter();
-
   const [step, setStep] = useState<AuthStep>('mobile');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -95,8 +91,11 @@ export function SignInView() {
           // Small delay to ensure storage completes
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          // Navigate to dashboard
-          router.push('/dashboard');
+          // Hard-navigate (full reload) so the PermissionsProvider re-reads the
+          // FRESH userData (incl. isSuperAdmin) from sessionStorage. A client-side
+          // router.push would keep the provider's stale value from before login,
+          // which shows "Access Denied" on the dashboard for a super-admin.
+          window.location.href = '/dashboard';
         }
       } catch (error: any) {
         setErrorMessage(error.message || 'Invalid OTP. Please try again.');
@@ -104,7 +103,7 @@ export function SignInView() {
         setLoading(false);
       }
     },
-    [mobile, otp, router]
+    [mobile, otp]
   );
 
   const handleBackToMobile = useCallback(() => {

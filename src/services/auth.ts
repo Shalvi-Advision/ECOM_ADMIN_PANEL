@@ -2,6 +2,8 @@ import type { OtpResponse, AuthResponse } from 'src/types/api';
 
 import { apiClient, clearAuthData } from 'src/utils/api-client';
 
+import { clearPlatformAuth } from 'src/services/platform-auth';
+
 // Storage keys
 const TOKEN_KEY = 'authToken';
 const USER_DATA_KEY = 'userData';
@@ -29,6 +31,9 @@ export async function verifyOtp(mobile: string, otp: string): Promise<AuthRespon
     // Verify storage
     const storedToken = sessionStorage.getItem(TOKEN_KEY);
     console.log('Token stored successfully:', !!storedToken);
+    // NOTE: platform login is a SEPARATE identity (a PlatformAdmin, e.g.
+    // 8108053373) from the tenant store-admin login here. The Tenants page pops
+    // its own PlatformLoginDialog for that — we do NOT auto-mint it.
   } else {
     console.error('Token not found in response!', response);
   }
@@ -45,8 +50,9 @@ export async function logout(): Promise<void> {
     // Continue with logout even if API call fails
     console.error('Logout API error:', error);
   } finally {
-    // Clear auth data from storage
+    // Clear auth data from storage (tenant + platform tokens)
     clearAuthData();
+    clearPlatformAuth();
   }
 }
 

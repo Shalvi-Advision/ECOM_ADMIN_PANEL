@@ -69,10 +69,21 @@ async function apiFetch<T>(
     // Parse response
     const data = await response.json();
 
-    // Handle 401 Unauthorized - auto logout
-    if (response.status === 401) {
+    // Handle 401 Unauthorized. We auto-logout ONLY for the session-validating
+    // calls (the auth profile/whoami). A 401 from a background widget — e.g. the
+    // header notifications poller — must NOT hard-redirect you off the page you're
+    // on (that bounced users off /tenants). It also must skip the login endpoints
+    // (auth/platform), whose 401s are results the caller handles itself.
+    const isAuthEndpoint =
+      endpoint.startsWith('/api/auth/') || endpoint.startsWith('/api/admin/platform/');
+    // Only these endpoints prove the session is dead enough to force re-login.
+    const isSessionCritical = endpoint.startsWith('/api/auth/profile');
+    const alreadyOnSignIn =
+      typeof window !== 'undefined' &&
+      (window.location.pathname === '/sign-in' || window.location.pathname === '/');
+
+    if (response.status === 401 && isSessionCritical && !isAuthEndpoint && !alreadyOnSignIn) {
       clearAuthData();
-      // Redirect to sign-in page
       window.location.href = '/sign-in';
       throw new ApiError(401, 'Unauthorized - Please sign in again');
     }
