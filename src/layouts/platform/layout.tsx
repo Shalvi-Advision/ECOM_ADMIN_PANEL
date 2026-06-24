@@ -6,8 +6,9 @@ import Button from '@mui/material/Button';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
-import { Logo } from 'src/components/logo';
 import { getPlatformAdmin, clearPlatformAuth } from 'src/services/platform-auth';
+
+import { Logo } from 'src/components/logo';
 
 // ----------------------------------------------------------------------
 
