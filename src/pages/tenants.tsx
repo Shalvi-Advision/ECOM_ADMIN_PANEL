@@ -15,6 +15,7 @@ import Container from '@mui/material/Container';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -73,6 +74,8 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [pending, setPending] = useState<PendingAction>(null);
+  // Type-to-confirm guard for the destructive Delete (it drops the tenant DB).
+  const [confirmText, setConfirmText] = useState('');
   const [busy, setBusy] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [domainSlug, setDomainSlug] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export default function Page() {
         await deleteTenant(pending.tenant.slug);
       }
       setPending(null);
+      setConfirmText('');
       await fetchTenants();
     } catch (err: any) {
       if (err?.status === 401 || err?.statusCode === 401) {
@@ -292,7 +296,14 @@ export default function Page() {
         </Stack>
       </Container>
 
-      <Dialog open={!!pending} onClose={() => !busy && setPending(null)}>
+      <Dialog
+        open={!!pending}
+        onClose={() => {
+          if (busy) return;
+          setPending(null);
+          setConfirmText('');
+        }}
+      >
         <DialogTitle sx={{ textTransform: 'capitalize' }}>{pending?.action} tenant</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -301,16 +312,42 @@ export default function Page() {
             {pending?.action === 'resume' &&
               `Resume "${pending?.tenant.name}"? Its storefront and admin will become reachable again.`}
             {pending?.action === 'delete' &&
-              `Delete "${pending?.tenant.name}"? This drops its database and marks it deleted. This cannot be undone.`}
+              `Delete "${pending?.tenant.name}"? This permanently drops its database (${pending?.tenant.dbName}) and all its data. This CANNOT be undone.`}
           </DialogContentText>
+          {pending?.action === 'delete' && (
+            <>
+              <DialogContentText sx={{ mt: 2 }}>
+                Type the tenant slug <strong>{pending?.tenant.slug}</strong> to confirm:
+              </DialogContentText>
+              <TextField
+                fullWidth
+                autoFocus
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={pending?.tenant.slug}
+                disabled={busy}
+                sx={{ mt: 1 }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPending(null)} disabled={busy}>
+          <Button
+            onClick={() => {
+              setPending(null);
+              setConfirmText('');
+            }}
+            disabled={busy}
+          >
             Cancel
           </Button>
           <Button
             onClick={confirmAction}
-            disabled={busy}
+            disabled={
+              busy ||
+              (pending?.action === 'delete' && confirmText.trim() !== pending?.tenant.slug)
+            }
             color={pending?.action === 'resume' ? 'success' : 'error'}
             variant="contained"
           >
