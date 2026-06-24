@@ -7,9 +7,10 @@ import { varAlpha } from 'minimal-shared/utils';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
-import { ProtectedRoute, PermissionGuard } from 'src/routes/components';
+import { ProtectedRoute, PermissionGuard, PlatformProtectedRoute } from 'src/routes/components';
 
 import { AuthLayout } from 'src/layouts/auth';
+import { PlatformLayout } from 'src/layouts/platform';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
@@ -36,6 +37,7 @@ export const DynamicSeasonalCategoriesPage = lazy(() => import('src/pages/dynami
 export const OffersPage = lazy(() => import('src/pages/offers'));
 export const AdminPermissionsPage = lazy(() => import('src/pages/admin-permissions'));
 export const TenantsPage = lazy(() => import('src/pages/tenants'));
+export const PlatformSignInPage = lazy(() => import('src/pages/platform-sign-in'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -106,6 +108,31 @@ export const routesSection: RouteObject[] = [
       { path: 'dynamic/banners', element: <PermissionGuard section="dynamicSection"><DynamicBannersPage /></PermissionGuard> },
       { path: 'dynamic/seasonal-categories', element: <PermissionGuard section="dynamicSection"><DynamicSeasonalCategoriesPage /></PermissionGuard> },
       { path: 'admin-permissions', element: <AdminPermissionsPage /> },
+    ],
+  },
+  // Platform (company) console — SEPARATE from the store-admin shell above.
+  // Its own OTP sign-in and its own route guard (platform token, not authToken).
+  {
+    path: 'platform/sign-in',
+    element: (
+      <AuthLayout>
+        <PlatformSignInPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: 'platform',
+    element: (
+      <PlatformProtectedRoute>
+        <PlatformLayout>
+          <Suspense fallback={renderFallback()}>
+            <Outlet />
+          </Suspense>
+        </PlatformLayout>
+      </PlatformProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <TenantsPage /> },
       { path: 'tenants', element: <TenantsPage /> },
     ],
   },

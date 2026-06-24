@@ -44,8 +44,11 @@ async function apiFetch<T>(
     });
   }
 
-  // Add Authorization header if token exists
-  if (token) {
+  // Add the tenant store-admin token ONLY if the caller didn't already supply an
+  // Authorization header. Control-plane calls (platform panel) pass their own
+  // platform Bearer token via options.headers; the tenant token must NOT clobber
+  // it, or /api/admin/tenants gets a token with no platformAdmin claim (403).
+  if (token && !headers.Authorization) {
     headers.Authorization = `Bearer ${token}`;
   }
 

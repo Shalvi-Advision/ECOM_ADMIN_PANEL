@@ -24,7 +24,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { CONFIG } from 'src/config-global';
-import { isPlatformAuthenticated } from 'src/services/platform-auth';
+import { clearPlatformAuth } from 'src/services/platform-auth';
 import { getTenants, deleteTenant, resumeTenant, suspendTenant } from 'src/services/tenants';
 
 import { Iconify } from 'src/components/iconify';
@@ -32,7 +32,15 @@ import { Scrollbar } from 'src/components/scrollbar';
 
 import { DomainDialog } from 'src/sections/tenants/domain-dialog';
 import { TenantWizardDialog } from 'src/sections/tenants/tenant-wizard-dialog';
-import { PlatformLoginDialog } from 'src/sections/tenants/platform-login-dialog';
+
+// ----------------------------------------------------------------------
+
+// A 401 from a control-plane call means the platform session is gone/invalid.
+// Bounce to the platform sign-in (the route guard owns the rest).
+function redirectToPlatformSignIn() {
+  clearPlatformAuth();
+  window.location.href = '/platform/sign-in';
+}
 
 // ----------------------------------------------------------------------
 
@@ -64,16 +72,10 @@ export default function Page() {
   const [error, setError] = useState<string>('');
   const [pending, setPending] = useState<PendingAction>(null);
   const [busy, setBusy] = useState(false);
-  const [needsLogin, setNeedsLogin] = useState(!isPlatformAuthenticated());
   const [wizardOpen, setWizardOpen] = useState(false);
   const [domainSlug, setDomainSlug] = useState<string | null>(null);
 
   const fetchTenants = useCallback(async () => {
-    if (!isPlatformAuthenticated()) {
-      setNeedsLogin(true);
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       setError('');
@@ -83,7 +85,7 @@ export default function Page() {
       }
     } catch (err: any) {
       if (err?.status === 401 || err?.statusCode === 401) {
-        setNeedsLogin(true);
+        redirectToPlatformSignIn();
       } else {
         setError(err.message || 'Failed to load tenants');
       }
@@ -93,11 +95,6 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    fetchTenants();
-  }, [fetchTenants]);
-
-  const handleLoginSuccess = useCallback(() => {
-    setNeedsLogin(false);
     fetchTenants();
   }, [fetchTenants]);
 
@@ -116,6 +113,10 @@ export default function Page() {
       setPending(null);
       await fetchTenants();
     } catch (err: any) {
+      if (err?.status === 401 || err?.statusCode === 401) {
+        redirectToPlatformSignIn();
+        return;
+      }
       setError(err.message || `Failed to ${pending.action} tenant`);
     } finally {
       setBusy(false);
@@ -142,7 +143,6 @@ export default function Page() {
                 variant="contained"
                 startIcon={<Iconify icon={'mingcute:add-line' as any} />}
                 onClick={() => setWizardOpen(true)}
-                disabled={needsLogin}
               >
                 Create Tenant
               </Button>
@@ -295,8 +295,6 @@ export default function Page() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <PlatformLoginDialog open={needsLogin} onSuccess={handleLoginSuccess} />
 
       <TenantWizardDialog
         open={wizardOpen}
